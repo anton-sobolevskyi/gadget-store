@@ -1,7 +1,9 @@
-import Footer from "@/components/layout/Footer";
 import type { Metadata } from "next";
 
 import "@/styles/tailwind.css";
+import { Toast } from "@/components/ui/toast";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export const metadata: Metadata = {
   title: "Gudget Hub",
@@ -16,8 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`antialiased`}>
+        <Header />
         {children}
         <Footer />
+        <Toast position="top-right" />
       </body>
     </html>
   );

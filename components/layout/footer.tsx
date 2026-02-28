@@ -6,6 +6,8 @@ import {
 } from "@icons-pack/react-simple-icons";
 import Link from "next/link";
 import { aboutLinks, supportLinks, policyLinks } from "@/lib/constants";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 export const icons = [
   {
@@ -30,7 +32,7 @@ export const icons = [
   },
 ];
 
-export default function Footer() {
+function Footer() {
   return (
     <footer className="bg-gray-900 text-white py-12 md:py-16">
       <div className="container mx-auto px-4 md:px-6">
@@ -53,14 +55,14 @@ export default function Footer() {
                 Subscribe to our newsletter
               </h4>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="email"
                   placeholder="Enter your email"
                   className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                 />
-                <button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-blue-600 hover:bg-blue-700">
                   Subscribe
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -137,3 +139,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export { Footer };
