@@ -1,8 +1,8 @@
-import { Search, Heart, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { Cart } from "../ui/cart";
+import { Search, Heart, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import Link from "next/link"
+import { Cart } from "../ui/cart"
 
 function Header() {
   return (
@@ -70,7 +70,7 @@ function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }
 
-export { Header };
+export { Header }

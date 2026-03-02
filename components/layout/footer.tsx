@@ -3,11 +3,11 @@ import {
   SiInstagram,
   SiX,
   SiYoutube,
-} from "@icons-pack/react-simple-icons";
-import Link from "next/link";
-import { aboutLinks, supportLinks, policyLinks } from "@/lib/constants";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+} from "@icons-pack/react-simple-icons"
+import Link from "next/link"
+import { aboutLinks, supportLinks, policyLinks } from "@/lib/constants"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
 
 export const icons = [
   {
@@ -30,7 +30,7 @@ export const icons = [
     name: "YouTube",
     icon: <SiYoutube className="w-5 h-5" />,
   },
-];
+]
 
 function Footer() {
   return (
@@ -137,7 +137,7 @@ function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }
 
-export { Footer };
+export { Footer }

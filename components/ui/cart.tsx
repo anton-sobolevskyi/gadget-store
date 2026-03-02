@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
-import { useStore } from "@/hooks/useStore";
-import { Button } from "./button";
-import { Badge } from "./badge";
+import Link from "next/link"
+import { ShoppingCart } from "lucide-react"
+import { useStore } from "@/hooks/useStore"
+import { Button } from "./button"
+import { Badge } from "./badge"
 
 function Cart() {
-  const cartCount = useStore((state) => state.getCartCount());
+  const cartCount = useStore(state => state.getCartCount())
 
   return (
     <Button variant="ghost" size="icon" className="relative" asChild>
@@ -23,7 +23,7 @@ function Cart() {
         )}
       </Link>
     </Button>
-  );
+  )
 }
 
-export { Cart };
+export { Cart }

@@ -1,4 +1,4 @@
-import { Toaster, ToasterProps } from "sonner";
+import { Toaster, ToasterProps } from "sonner"
 
 function Toast(props: ToasterProps) {
   return (
@@ -14,7 +14,7 @@ function Toast(props: ToasterProps) {
       }
       {...props}
     />
-  );
+  )
 }
 
-export { Toast };
+export { Toast }
