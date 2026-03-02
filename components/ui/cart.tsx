@@ -9,6 +9,7 @@ import { Badge } from "./badge"
 function Cart() {
   const cartCount = useStore(state => state.getCartCount())
 
+  console.log(cartCount)
   return (
     <Button variant="ghost" size="icon" className="relative" asChild>
       <Link href="/cart">

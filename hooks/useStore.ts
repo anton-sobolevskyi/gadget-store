@@ -104,6 +104,7 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: "gadget-store",
+      skipHydration: true,
     }
   )
 )
