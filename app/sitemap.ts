@@ -5,6 +5,9 @@ import { getAllProducts } from "@/lib/repositories/products"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 
+// Generate at request time instead of build time, since product data depends on the database.
+export const dynamic = "force-dynamic"
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await getAllProducts()
 
