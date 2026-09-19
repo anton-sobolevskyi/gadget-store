@@ -2,6 +2,7 @@ import { eq, ilike, or } from "drizzle-orm"
 
 import { db } from "@/lib/db"
 import { products as productsTable } from "@/db/schema"
+import { slugify } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
 type ProductRow = typeof productsTable.$inferSelect
@@ -86,4 +87,59 @@ export async function searchProducts(query: string): Promise<Product[]> {
     ),
   })
   return rows.map(toProduct)
+}
+
+export type ProductInput = {
+  name: string
+  price: number
+  originalPrice?: number
+  image: string
+  images?: string[]
+  category: string
+  description: string
+  specifications: Record<string, string>
+  colors?: string[]
+  storage?: string[]
+  inStock: boolean
+}
+
+function toRowValues(input: ProductInput) {
+  return {
+    name: input.name,
+    price: input.price.toFixed(2),
+    originalPrice: input.originalPrice?.toFixed(2),
+    image: input.image,
+    images: input.images ?? [input.image],
+    category: input.category,
+    description: input.description,
+    specifications: input.specifications,
+    colors: input.colors,
+    storage: input.storage,
+    inStock: input.inStock,
+  }
+}
+
+export async function createProduct(input: ProductInput): Promise<Product> {
+  const slug = slugify(input.name)
+  const [row] = await db
+    .insert(productsTable)
+    .values({ slug, ...toRowValues(input) })
+    .returning()
+  return toProduct(row)
+}
+
+export async function updateProduct(
+  id: string,
+  input: ProductInput
+): Promise<Product | null> {
+  const [row] = await db
+    .update(productsTable)
+    .set({ ...toRowValues(input), updatedAt: new Date() })
+    .where(eq(productsTable.id, id))
+    .returning()
+  return row ? toProduct(row) : null
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await db.delete(productsTable).where(eq(productsTable.id, id))
 }

@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 import { db } from "@/lib/db"
-import { orderItems, orders } from "@/db/schema"
+import { orderItems, orders, type OrderStatus } from "@/db/schema"
 import type { CartItem } from "@/types/cart"
 
 export async function createOrder(
@@ -50,4 +50,28 @@ export async function getOrderItems(orderId: string) {
   return db.query.orderItems.findMany({
     where: eq(orderItems.orderId, orderId),
   })
+}
+
+export async function getOrdersPaginated({
+  status,
+  page = 1,
+  pageSize = 20,
+}: {
+  status?: OrderStatus
+  page?: number
+  pageSize?: number
+}) {
+  const where = status ? eq(orders.status, status) : undefined
+
+  const [rows, [{ total }]] = await Promise.all([
+    db.query.orders.findMany({
+      where,
+      orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    }),
+    db.select({ total: count() }).from(orders).where(where),
+  ])
+
+  return { orders: rows, total: Number(total), page, pageSize }
 }
