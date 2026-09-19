@@ -66,25 +66,23 @@ export async function clearCartAction() {
   revalidatePath("/cart")
 }
 
-export async function finalizeOrderAction(phone?: string, password?: string) {
+export async function finalizeOrderAction(email?: string, password?: string) {
   const session = await auth()
   const sessionId = await getOrCreateCartSessionId()
 
   if (!session?.user?.id || !session.user.email) {
-    if (!phone || !password) {
-      throw new Error(
-        "Enter your phone number and password to place the order."
-      )
+    if (!email || !password) {
+      throw new Error("Enter your email and password to place the order.")
     }
 
     const { order } = await finalizeOrderForCustomer({
-      phone,
+      email,
       password,
       sessionId,
     })
     const { signIn } = await import("@/lib/auth")
     await signIn("credentials", {
-      phone,
+      email,
       password,
       redirectTo: `/order/${order.id}`,
     })

@@ -8,6 +8,8 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { normalizePhone } from "@/lib/customer"
+import { getCartSessionId } from "@/lib/cart-session"
+import { mergeGuestCartIntoUser } from "@/lib/repositories/cart"
 import { users, type UserRole } from "@/db/schema"
 
 const credentialsSchema = z
@@ -70,6 +72,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       : []),
   ],
   callbacks: {
+    signIn: async ({ user }) => {
+      // Fold any guest-session cart into the account being signed into.
+      if (user.id) {
+        const sessionId = await getCartSessionId()
+        if (sessionId) await mergeGuestCartIntoUser(sessionId, user.id)
+      }
+      return true
+    },
     jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id

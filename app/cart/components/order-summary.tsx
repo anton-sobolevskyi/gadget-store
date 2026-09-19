@@ -22,7 +22,7 @@ function OrderSummary({
   const router = useRouter()
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { subtotal, shipping, total } = calculateOrderTotal(items)
 
@@ -110,11 +110,11 @@ function OrderSummary({
           ) : (
             <div className="space-y-3">
               <Input
-                type="tel"
-                placeholder="Phone number"
-                value={phone}
-                onChange={event => setPhone(event.target.value)}
-                autoComplete="tel"
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                autoComplete="email"
               />
               <Input
                 type="password"
@@ -130,7 +130,7 @@ function OrderSummary({
                   setError(null)
                   setIsFinalizing(true)
                   try {
-                    await finalizeOrderAction(phone, password)
+                    await finalizeOrderAction(email, password)
                   } catch (error) {
                     const message =
                       error instanceof Error

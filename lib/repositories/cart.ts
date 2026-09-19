@@ -1,8 +1,10 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 
 import { db } from "@/lib/db"
 import { cartItems, carts, products } from "@/db/schema"
 import type { CartItem } from "@/types/cart"
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 async function findOrCreateCart(sessionId: string, userId?: string) {
   const existing = await db.query.carts.findFirst({
@@ -121,4 +123,68 @@ export async function removeCartItem(
 export async function clearCart(sessionId: string, userId?: string) {
   const cart = await findOrCreateCart(sessionId, userId)
   await db.delete(cartItems).where(eq(cartItems.cartId, cart.id))
+}
+
+// Folds a guest's session-keyed cart into their account cart after login/checkout.
+export async function mergeGuestCartIntoUser(
+  sessionId: string,
+  userId: string
+) {
+  await db.transaction(tx => mergeGuestCartIntoUserTx(tx, sessionId, userId))
+}
+
+export async function mergeGuestCartIntoUserTx(
+  tx: Tx,
+  sessionId: string,
+  userId: string
+) {
+  const guestCart = await tx.query.carts.findFirst({
+    where: and(eq(carts.sessionId, sessionId), isNull(carts.userId)),
+  })
+  if (!guestCart) return
+
+  const userCart = await tx.query.carts.findFirst({
+    where: eq(carts.userId, userId),
+  })
+
+  if (!userCart) {
+    await tx.update(carts).set({ userId }).where(eq(carts.id, guestCart.id))
+    return
+  }
+
+  const guestItems = await tx.query.cartItems.findMany({
+    where: eq(cartItems.cartId, guestCart.id),
+  })
+
+  for (const guestItem of guestItems) {
+    const existing = await tx.query.cartItems.findFirst({
+      where: and(
+        eq(cartItems.cartId, userCart.id),
+        eq(cartItems.productId, guestItem.productId),
+        guestItem.selectedColor
+          ? eq(cartItems.selectedColor, guestItem.selectedColor)
+          : undefined,
+        guestItem.selectedStorage
+          ? eq(cartItems.selectedStorage, guestItem.selectedStorage)
+          : undefined
+      ),
+    })
+
+    if (existing) {
+      await tx
+        .update(cartItems)
+        .set({ quantity: existing.quantity + guestItem.quantity })
+        .where(eq(cartItems.id, existing.id))
+    } else {
+      await tx.insert(cartItems).values({
+        cartId: userCart.id,
+        productId: guestItem.productId,
+        quantity: guestItem.quantity,
+        selectedColor: guestItem.selectedColor,
+        selectedStorage: guestItem.selectedStorage,
+      })
+    }
+  }
+
+  await tx.delete(carts).where(eq(carts.id, guestCart.id))
 }
