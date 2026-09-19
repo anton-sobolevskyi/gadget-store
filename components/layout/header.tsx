@@ -20,28 +20,49 @@ function Header() {
           </Link>
 
           {/* Search Bar - Desktop/Tablet */}
-          <div className="hidden md:flex flex-1 max-w-2xl">
+          <form
+            role="search"
+            action="/search"
+            method="GET"
+            className="hidden md:flex flex-1 max-w-2xl"
+          >
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                aria-hidden="true"
+              />
+              <label htmlFor="site-search-desktop" className="sr-only">
+                Search products
+              </label>
               <Input
+                id="site-search-desktop"
+                name="q"
                 type="search"
                 placeholder="Search smartphones, headphones..."
                 className="pl-10 h-10 rounded-lg border-gray-300 focus:border-blue-500"
               />
             </div>
-          </div>
+          </form>
 
           {/* Icons */}
           <div className="flex items-center gap-2 md:gap-4">
             {/* Search Icon - Mobile */}
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Search className="w-5 h-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label="Search"
+              asChild
+            >
+              <Link href="/search">
+                <Search className="w-5 h-5" aria-hidden="true" />
+              </Link>
             </Button>
 
             {/* Wishlist */}
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/wishlist">
-                <Heart className="w-5 h-5" />
+              <Link href="/wishlist" aria-label="Wishlist">
+                <Heart className="w-5 h-5" aria-hidden="true" />
               </Link>
             </Button>
 
@@ -50,24 +71,37 @@ function Header() {
 
             {/* User */}
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/account">
-                <User className="w-5 h-5" />
+              <Link href="/account" aria-label="Account">
+                <User className="w-5 h-5" aria-hidden="true" />
               </Link>
             </Button>
           </div>
         </div>
 
         {/* Mobile Search */}
-        <div className="md:hidden pb-3">
+        <form
+          role="search"
+          action="/search"
+          method="GET"
+          className="md:hidden pb-3"
+        >
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+              aria-hidden="true"
+            />
+            <label htmlFor="site-search-mobile" className="sr-only">
+              Search products
+            </label>
             <Input
+              id="site-search-mobile"
+              name="q"
               type="search"
               placeholder="Search products..."
               className="pl-10 h-10 rounded-lg border-gray-300"
             />
           </div>
-        </div>
+        </form>
       </div>
     </header>
   )
