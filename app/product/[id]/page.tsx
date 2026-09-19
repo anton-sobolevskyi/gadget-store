@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { products } from "@/data/products"
 import Link from "next/link"
+import type { Metadata } from "next"
 import { ProductBreadcrumb } from "./components/product-breadcrumb"
 import { Product } from "@/types/product"
 import { Shield, Star, Truck } from "lucide-react"
@@ -9,14 +9,44 @@ import { ProductSettings } from "./components/product-settings"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProductCard } from "@/app/components/product-card"
 import { ProductPreview } from "./components/product-preview"
+import { getProductById, getRelatedProducts } from "@/lib/repositories/products"
 
 type ProductDetailProps = {
   params: Promise<{ id: string }>
 }
 
+export async function generateMetadata({
+  params,
+}: ProductDetailProps): Promise<Metadata> {
+  const { id } = await params
+  const product = await getProductById(id)
+
+  if (!product) {
+    return { title: "Product not found" }
+  }
+
+  return {
+    title: `${product.name} | Gadget Hub`,
+    description: product.description,
+    alternates: { canonical: `/product/${product.id}` },
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: [{ url: product.image }],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.description,
+      images: [product.image],
+    },
+  }
+}
+
 export default async function ProductDetail({ params }: ProductDetailProps) {
   const { id } = await params
-  const product: Product | undefined = products.find(p => p.id === id)
+  const product: Product | null = await getProductById(id)
 
   if (!product) {
     return (
@@ -29,12 +59,35 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
     )
   }
 
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4)
+  const relatedProducts = await getRelatedProducts(product)
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images ?? [product.image],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviews,
+    },
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "USD",
+      availability: product.inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  }
 
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProductBreadcrumb product={product} />
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">

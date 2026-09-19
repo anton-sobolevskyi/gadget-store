@@ -1,12 +1,21 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { bestSellers, featuredProducts, heroSlides } from "@/lib/constants"
+import { heroSlides } from "@/lib/constants"
 import { ChevronRight } from "lucide-react"
 import { categories } from "@/data/products"
+import {
+  getBestSellers,
+  getFeaturedProducts,
+} from "@/lib/repositories/products"
 import { ProductCard } from "./components/product-card"
 import { HeroSlide } from "./components/hero-slide"
 
-export default function Home() {
+export default async function Home() {
+  const [featuredProducts, bestSellers] = await Promise.all([
+    getFeaturedProducts(),
+    getBestSellers(),
+  ])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}

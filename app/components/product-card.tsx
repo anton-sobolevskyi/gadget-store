@@ -30,8 +30,8 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0
 
   return (
-    <Link href={`/product/${product.id}`}>
-      <Card className="group h-full border-none shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+    <Card className="group h-full border-none shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+      <Link href={`/product/${product.id}`}>
         <CardContent className="p-4">
           {/* Image */}
           <div className="relative aspect-square mb-4 overflow-hidden rounded-lg bg-gray-50">
@@ -61,10 +61,14 @@ export function ProductCard({ product }: ProductCardProps) {
           </h3>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 mb-3">
+          <div
+            className="flex items-center gap-1 mb-3"
+            aria-label={`Rated ${product.rating} out of 5, ${product.reviews} reviews`}
+          >
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
+                aria-hidden="true"
                 className={`w-4 h-4 ${
                   i < Math.floor(product.rating)
                     ? "fill-yellow-400 text-yellow-400"
@@ -89,18 +93,18 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
         </CardContent>
+      </Link>
 
-        <CardFooter className="p-4 pt-0">
-          <Button
-            onClick={handleAddToCart}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={!product.inStock}
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            {product.inStock ? "Add to Cart" : "Out of Stock"}
-          </Button>
-        </CardFooter>
-      </Card>
-    </Link>
+      <CardFooter className="p-4 pt-0">
+        <Button
+          onClick={handleAddToCart}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+          disabled={!product.inStock}
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" aria-hidden="true" />
+          {product.inStock ? "Add to Cart" : "Out of Stock"}
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
