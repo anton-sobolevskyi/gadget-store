@@ -82,7 +82,13 @@ export default async function AccountOrdersPage() {
                       </Badge>
                     </td>
                     <td className="p-4 text-gray-900">
-                      ${Number(order.total).toFixed(2)}
+                      <div>${Number(order.total).toFixed(2)}</div>
+                      {order.promoCode && (
+                        <div className="text-xs text-green-700">
+                          {order.promoCode} · -$
+                          {Number(order.discount).toFixed(2)}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4 text-gray-600">
                       {order.createdAt.toLocaleDateString()}

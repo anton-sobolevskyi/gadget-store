@@ -5,7 +5,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { calculateOrderTotal } from "@/lib/order-totals"
-import { finalizeOrderAction } from "../actions"
+import {
+  applyPromoCodeAction,
+  finalizeOrderAction,
+  removePromoCodeAction,
+} from "../actions"
+import type { PromoCode } from "@/db/schema"
 import type { CartItem } from "@/types/cart"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -14,9 +19,11 @@ import { toast } from "sonner"
 
 function OrderSummary({
   items,
+  promoCode,
   isAuthenticated,
 }: {
   items: CartItem[]
+  promoCode?: PromoCode
   isAuthenticated: boolean
 }) {
   const router = useRouter()
@@ -24,7 +31,36 @@ function OrderSummary({
   const [error, setError] = useState<string | null>(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const { subtotal, shipping, total } = calculateOrderTotal(items)
+  const [promoInput, setPromoInput] = useState("")
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
+  const appliedPromo = promoCode
+    ? {
+        code: promoCode.code,
+        type: promoCode.type,
+        value: Number(promoCode.value),
+      }
+    : undefined
+  const { subtotal, shipping, discount, total } = calculateOrderTotal(
+    items,
+    appliedPromo
+  )
+
+  const handleApplyPromo = async () => {
+    setError(null)
+    setIsApplyingPromo(true)
+    try {
+      await applyPromoCodeAction(promoInput)
+      setPromoInput("")
+      router.refresh()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to apply promo code."
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsApplyingPromo(false)
+    }
+  }
 
   const handleFinalize = async () => {
     setError(null)
@@ -52,15 +88,43 @@ function OrderSummary({
             Order Summary
           </h2>
 
-          {/* Promo Code */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               Promo Code
             </label>
-            <div className="flex gap-2">
-              <Input placeholder="Enter code" className="flex-1" />
-              <Button variant="outline">Apply</Button>
-            </div>
+            {promoCode ? (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-green-200 bg-green-50 px-3 py-2">
+                <span className="text-sm font-semibold text-green-700">
+                  {promoCode.code} applied
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    await removePromoCodeAction()
+                    router.refresh()
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter code"
+                  className="flex-1"
+                  value={promoInput}
+                  onChange={event => setPromoInput(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleApplyPromo}
+                  disabled={!promoInput.trim() || isApplyingPromo}
+                >
+                  {isApplyingPromo ? "Applying..." : "Apply"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator className="my-6" />
@@ -71,6 +135,12 @@ function OrderSummary({
               <span>Subtotal</span>
               <span className="font-semibold">${subtotal.toFixed(2)}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-green-700">
+                <span>Discount</span>
+                <span className="font-semibold">-${discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-gray-700">
               <span>Shipping</span>
               <span className="font-semibold">

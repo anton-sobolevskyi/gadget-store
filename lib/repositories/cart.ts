@@ -3,6 +3,10 @@ import { and, eq, isNull } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { cartItems, carts, products } from "@/db/schema"
 import type { CartItem } from "@/types/cart"
+import {
+  getPromoCodeByCode,
+  getPromoCodeById,
+} from "@/lib/repositories/promo-codes"
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -23,6 +27,11 @@ export async function getCart(
   sessionId: string,
   userId?: string
 ): Promise<CartItem[]> {
+  const state = await getCartState(sessionId, userId)
+  return state.items
+}
+
+export async function getCartState(sessionId: string, userId?: string) {
   const cart = await findOrCreateCart(sessionId, userId)
 
   const rows = await db
@@ -31,7 +40,7 @@ export async function getCart(
     .innerJoin(products, eq(cartItems.productId, products.id))
     .where(eq(cartItems.cartId, cart.id))
 
-  return rows.map(({ item, product }) => ({
+  const items = rows.map(({ item, product }) => ({
     id: product.id,
     name: product.name,
     price: Number(product.price),
@@ -52,6 +61,41 @@ export async function getCart(
     selectedColor: item.selectedColor ?? undefined,
     selectedStorage: item.selectedStorage ?? undefined,
   }))
+
+  const storedPromoCode = cart.promoCodeId
+    ? await getPromoCodeById(cart.promoCodeId)
+    : undefined
+  const promoCode = storedPromoCode?.isActive ? storedPromoCode : undefined
+
+  return { items, promoCode }
+}
+
+export async function applyPromoCode(
+  sessionId: string,
+  code: string,
+  userId?: string
+) {
+  const cart = await findOrCreateCart(sessionId, userId)
+  const promoCode = await getPromoCodeByCode(code)
+
+  if (!promoCode || !promoCode.isActive) {
+    throw new Error("This promo code is invalid or inactive.")
+  }
+
+  await db
+    .update(carts)
+    .set({ promoCodeId: promoCode.id, updatedAt: new Date() })
+    .where(eq(carts.id, cart.id))
+
+  return promoCode
+}
+
+export async function removePromoCode(sessionId: string, userId?: string) {
+  const cart = await findOrCreateCart(sessionId, userId)
+  await db
+    .update(carts)
+    .set({ promoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cart.id))
 }
 
 export async function addCartItem(
@@ -123,6 +167,10 @@ export async function removeCartItem(
 export async function clearCart(sessionId: string, userId?: string) {
   const cart = await findOrCreateCart(sessionId, userId)
   await db.delete(cartItems).where(eq(cartItems.cartId, cart.id))
+  await db
+    .update(carts)
+    .set({ promoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cart.id))
 }
 
 // Folds a guest's session-keyed cart into their account cart after login/checkout.
@@ -150,6 +198,13 @@ export async function mergeGuestCartIntoUserTx(
   if (!userCart) {
     await tx.update(carts).set({ userId }).where(eq(carts.id, guestCart.id))
     return
+  }
+
+  if (!userCart.promoCodeId && guestCart.promoCodeId) {
+    await tx
+      .update(carts)
+      .set({ promoCodeId: guestCart.promoCodeId })
+      .where(eq(carts.id, userCart.id))
   }
 
   const guestItems = await tx.query.cartItems.findMany({

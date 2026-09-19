@@ -10,8 +10,10 @@ import {
 } from "@/lib/repositories/orders"
 import {
   addCartItem,
+  applyPromoCode,
   clearCart,
   getCart,
+  removePromoCode,
   removeCartItem,
   updateCartItemQuantity,
 } from "@/lib/repositories/cart"
@@ -63,6 +65,18 @@ export async function removeFromCartAction(productId: string) {
 export async function clearCartAction() {
   const { sessionId, userId } = await getIdentity()
   await clearCart(sessionId, userId)
+  revalidatePath("/cart")
+}
+
+export async function applyPromoCodeAction(code: string) {
+  const { sessionId, userId } = await getIdentity()
+  await applyPromoCode(sessionId, code, userId)
+  revalidatePath("/cart")
+}
+
+export async function removePromoCodeAction() {
+  const { sessionId, userId } = await getIdentity()
+  await removePromoCode(sessionId, userId)
   revalidatePath("/cart")
 }
 

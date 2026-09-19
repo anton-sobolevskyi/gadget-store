@@ -60,6 +60,22 @@ export default async function OrderPage({ params }: OrderPageProps) {
           </div>
 
           <div className="flex justify-between border-t border-gray-200 pt-4 text-xl font-bold text-gray-900">
+            <span>Subtotal</span>
+            <span>${Number(order.subtotal).toFixed(2)}</span>
+          </div>
+          {Number(order.discount) > 0 && (
+            <div className="flex justify-between pt-2 text-green-700">
+              <span>
+                Discount{order.promoCode ? ` (${order.promoCode})` : ""}
+              </span>
+              <span>-${Number(order.discount).toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between pt-2 text-gray-600">
+            <span>Shipping</span>
+            <span>${Number(order.shipping).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between border-t border-gray-200 pt-4 text-xl font-bold text-gray-900">
             <span>Total</span>
             <span>${Number(order.total).toFixed(2)}</span>
           </div>

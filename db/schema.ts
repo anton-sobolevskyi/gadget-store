@@ -110,6 +110,9 @@ export const carts = pgTable("carts", {
   // Guest carts are keyed by an opaque session id stored in a cookie.
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
   sessionId: text("session_id"),
+  promoCodeId: uuid("promo_code_id").references(() => promoCodes.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -144,11 +147,35 @@ export const orders = pgTable("orders", {
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   email: text("email").notNull(),
   status: text("status").$type<OrderStatus>().notNull().default("pending"),
+  subtotal: numeric("subtotal", { precision: 10, scale: 2 }).notNull(),
+  shipping: numeric("shipping", { precision: 10, scale: 2 }).notNull(),
+  discount: numeric("discount", { precision: 10, scale: 2 })
+    .notNull()
+    .default("0"),
+  promoCode: text("promo_code"),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 })
+
+export const promoCodeTypeValues = ["percent", "fixed"] as const
+export type PromoCodeType = (typeof promoCodeTypeValues)[number]
+
+export const promoCodes = pgTable("promo_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(),
+  type: text("type").$type<PromoCodeType>().notNull(),
+  value: numeric("value", { precision: 10, scale: 2 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+export type PromoCode = typeof promoCodes.$inferSelect
 
 // Snapshot of the product at time of purchase so later catalog edits don't
 // rewrite historical orders.

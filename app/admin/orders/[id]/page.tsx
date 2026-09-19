@@ -56,6 +56,26 @@ export default async function AdminOrderDetailPage({
             ${Number(order.total).toFixed(2)}
           </div>
         </div>
+        <div>
+          <div className="text-sm text-gray-500">Subtotal</div>
+          <div className="font-medium text-gray-900">
+            ${Number(order.subtotal).toFixed(2)}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Discount</div>
+          <div className="font-medium text-gray-900">
+            {order.promoCode
+              ? `${order.promoCode} (-$${Number(order.discount).toFixed(2)})`
+              : "$0.00"}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Shipping</div>
+          <div className="font-medium text-gray-900">
+            ${Number(order.shipping).toFixed(2)}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">

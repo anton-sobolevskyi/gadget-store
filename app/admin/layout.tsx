@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/authz"
 
 const adminNavLinks = [
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/promo-codes", label: "Promo codes" },
   { href: "/admin/orders", label: "Orders" },
 ]
 

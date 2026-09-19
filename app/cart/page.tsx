@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button"
 import { auth } from "@/lib/auth"
 import { getCartSessionId } from "@/lib/cart-session"
-import { getCart } from "@/lib/repositories/cart"
+import { getCartState } from "@/lib/repositories/cart"
 import Link from "next/link"
 import { CartItems } from "./components/cart-items"
 import { OrderSummary } from "./components/order-summary"
 
 export default async function Cart() {
   const [session, sessionId] = await Promise.all([auth(), getCartSessionId()])
-  const cart = await getCart(sessionId ?? "", session?.user?.id)
+  const { items: cart, promoCode } = await getCartState(
+    sessionId ?? "",
+    session?.user?.id
+  )
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0)
 
   return (
@@ -52,6 +55,7 @@ export default async function Cart() {
           {/* Order Summary */}
           <OrderSummary
             items={cart}
+            promoCode={promoCode}
             isAuthenticated={Boolean(session?.user?.id && session.user.email)}
           />
         </div>

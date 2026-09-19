@@ -35,6 +35,19 @@ async function createOrderFromUserCart(
 
   if (rows.length === 0) throw new Error("Your cart is empty.")
 
+  const promoCode = cart.promoCodeId
+    ? await tx.query.promoCodes.findFirst({
+        where: (promoCodes, { eq }) => eq(promoCodes.id, cart.promoCodeId!),
+      })
+    : undefined
+  const appliedPromo = promoCode?.isActive
+    ? {
+        code: promoCode.code,
+        type: promoCode.type,
+        value: Number(promoCode.value),
+      }
+    : undefined
+
   const items: CartItem[] = rows.map(({ item, product }) => ({
     id: product.id,
     name: product.name,
@@ -56,11 +69,22 @@ async function createOrderFromUserCart(
     selectedColor: item.selectedColor ?? undefined,
     selectedStorage: item.selectedStorage ?? undefined,
   }))
-  const { total } = calculateOrderTotal(items)
+  const { subtotal, shipping, discount, total } = calculateOrderTotal(
+    items,
+    appliedPromo
+  )
 
   const [order] = await tx
     .insert(orders)
-    .values({ email, userId, total: total.toFixed(2) })
+    .values({
+      email,
+      userId,
+      subtotal: subtotal.toFixed(2),
+      shipping: shipping.toFixed(2),
+      discount: discount.toFixed(2),
+      promoCode: appliedPromo?.code,
+      total: total.toFixed(2),
+    })
     .returning()
 
   await tx.insert(orderItems).values(
@@ -76,6 +100,10 @@ async function createOrderFromUserCart(
   )
 
   await tx.delete(cartItems).where(eq(cartItems.cartId, cart.id))
+  await tx
+    .update(carts)
+    .set({ promoCodeId: null, updatedAt: new Date() })
+    .where(eq(carts.id, cart.id))
 
   return order
 }
@@ -85,11 +113,18 @@ export async function createOrder(
   items: CartItem[],
   userId?: string
 ) {
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const { subtotal, shipping, discount, total } = calculateOrderTotal(items)
 
   const [order] = await db
     .insert(orders)
-    .values({ email, userId, total: total.toFixed(2) })
+    .values({
+      email,
+      userId,
+      subtotal: subtotal.toFixed(2),
+      shipping: shipping.toFixed(2),
+      discount: discount.toFixed(2),
+      total: total.toFixed(2),
+    })
     .returning()
 
   if (items.length > 0) {
