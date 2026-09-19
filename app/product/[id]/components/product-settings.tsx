@@ -143,6 +143,12 @@ function ProductSettings({ product }: { product: Product }) {
           size="icon"
           variant="outline"
           className="h-12 w-12"
+          aria-label={
+            isInWishlist
+              ? `Remove ${product.name} from wishlist`
+              : `Add ${product.name} to wishlist`
+          }
+          aria-pressed={isInWishlist}
           onClick={handleToggleWishlist}
         >
           <Heart

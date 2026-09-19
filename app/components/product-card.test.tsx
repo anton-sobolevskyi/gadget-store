@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ProductCard } from "@/app/components/product-card"
+import { useStore } from "@/hooks/useStore"
 import type { Product } from "@/types/product"
 
 const { addToCartAction } = vi.hoisted(() => ({
@@ -35,6 +36,7 @@ const product: Product = {
 describe("ProductCard", () => {
   beforeEach(() => {
     addToCartAction.mockClear()
+    useStore.setState({ wishlist: [], hasHydrated: true })
   })
 
   it("renders product name, price and discount badge", () => {
@@ -65,5 +67,24 @@ describe("ProductCard", () => {
     render(<ProductCard product={{ ...product, inStock: false }} />)
     const button = screen.getByRole("button", { name: /out of stock/i })
     expect(button).toBeDisabled()
+  })
+
+  it("toggles wishlist membership without adding the product to the cart", async () => {
+    const user = userEvent.setup()
+    render(<ProductCard product={product} />)
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Add Galaxy Pro X Max to wishlist",
+      })
+    )
+
+    expect(useStore.getState().wishlist).toContain(product.id)
+    expect(addToCartAction).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole("button", {
+        name: "Remove Galaxy Pro X Max from wishlist",
+      })
+    ).toBeInTheDocument()
   })
 })

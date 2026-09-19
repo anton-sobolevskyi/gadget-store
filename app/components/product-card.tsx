@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ImageWithFallback } from "@/components/ui/image-with-fallback"
 import { addToCartAction } from "@/app/cart/actions"
+import { useStore } from "@/hooks/useStore"
 import { Product } from "@/types/product"
-import { ShoppingCart, Star } from "lucide-react"
+import { Heart, ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -17,6 +18,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter()
+  const wishlist = useStore(state => state.wishlist)
+  const toggleWishlist = useStore(state => state.toggleWishlist)
+  const isInWishlist = wishlist.includes(product.id)
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -32,7 +36,7 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0
 
   return (
-    <Card className="group h-full border-none shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+    <Card className="group relative h-full border-none shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
       <Link href={`/product/${product.id}`}>
         <CardContent className="p-4">
           {/* Image */}
@@ -96,6 +100,30 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </CardContent>
       </Link>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="absolute left-6 top-6 z-10 bg-white/90"
+        aria-label={
+          isInWishlist
+            ? `Remove ${product.name} from wishlist`
+            : `Add ${product.name} to wishlist`
+        }
+        aria-pressed={isInWishlist}
+        onClick={() => {
+          toggleWishlist(product.id)
+          toast.success(
+            isInWishlist ? "Removed from wishlist" : "Added to wishlist"
+          )
+        }}
+      >
+        <Heart
+          className={`w-4 h-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`}
+          aria-hidden="true"
+        />
+      </Button>
 
       <CardFooter className="p-4 pt-0">
         <Button

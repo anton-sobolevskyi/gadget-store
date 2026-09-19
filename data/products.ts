@@ -171,3 +171,7 @@ export const categories = [
   { id: "tablets", name: "Tablets", icon: "📱" },
   { id: "cameras", name: "Cameras", icon: "📷" },
 ]
+
+export function getCategoryById(id: string) {
+  return categories.find(category => category.id === id)
+}
