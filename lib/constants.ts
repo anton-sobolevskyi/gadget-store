@@ -1,4 +1,3 @@
-import { products } from "@/data/products"
 import { Slide } from "@/types/ui"
 
 export const aboutLinks = [
@@ -21,9 +20,6 @@ export const policyLinks = [
   { href: "/cookies", name: "Cookie Policy" },
   { href: "/warranty", name: "Warranty" },
 ]
-
-export const featuredProducts = products.slice(0, 4)
-export const bestSellers = products.filter(p => p.rating >= 4.7)
 
 export const heroSlides: Slide[] = [
   {
