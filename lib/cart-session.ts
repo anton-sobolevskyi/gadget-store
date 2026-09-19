@@ -1,7 +1,11 @@
 import { cookies } from "next/headers"
 import { randomUUID } from "crypto"
 
-const CART_SESSION_COOKIE = "cart_session_id"
+export const CART_SESSION_COOKIE = "cart_session_id"
+
+export async function getCartSessionId(): Promise<string | undefined> {
+  return (await cookies()).get(CART_SESSION_COOKIE)?.value
+}
 
 // Ensures every visitor (guest or signed-in) has a stable id to key their cart row on.
 export async function getOrCreateCartSessionId(): Promise<string> {

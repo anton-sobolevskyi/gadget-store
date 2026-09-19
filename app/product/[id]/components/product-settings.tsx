@@ -9,14 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { addToCartAction } from "@/app/cart/actions"
 import { useStore } from "@/hooks/useStore"
 import { Product } from "@/types/product"
 import { Heart, Minus, Plus, ShoppingCart } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
 function ProductSettings({ product }: { product: Product }) {
-  const addToCart = useStore(state => state.addToCart)
+  const router = useRouter()
   const toggleWishlist = useStore(state => state.toggleWishlist)
   const wishlist = useStore(state => state.wishlist)
 
@@ -26,14 +28,15 @@ function ProductSettings({ product }: { product: Product }) {
 
   const isInWishlist = wishlist.includes(product.id)
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity, selectedColor, selectedStorage)
+  const handleAddToCart = async () => {
+    await addToCartAction(product.id, quantity, selectedColor, selectedStorage)
+    router.refresh()
     toast.success(`${product.name} added to cart!`)
   }
 
-  const handleBuyNow = () => {
-    addToCart(product, quantity, selectedColor, selectedStorage)
-    window.location.href = "/cart"
+  const handleBuyNow = async () => {
+    await addToCartAction(product.id, quantity, selectedColor, selectedStorage)
+    router.push("/cart")
   }
 
   const handleToggleWishlist = () => {

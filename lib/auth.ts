@@ -7,12 +7,16 @@ import { eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { normalizePhone } from "@/lib/customer"
 import { users, type UserRole } from "@/db/schema"
 
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-})
+const credentialsSchema = z
+  .object({
+    email: z.string().email().optional(),
+    phone: z.string().min(7).optional(),
+    password: z.string().min(8),
+  })
+  .refine(value => value.email || value.phone)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -24,15 +28,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
+        phone: { label: "Phone number", type: "tel" },
         password: { label: "Password", type: "password" },
       },
       authorize: async credentials => {
         const parsed = credentialsSchema.safeParse(credentials)
         if (!parsed.success) return null
 
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, parsed.data.email),
-        })
+        const user = parsed.data.phone
+          ? await db.query.users.findFirst({
+              where: eq(users.phone, normalizePhone(parsed.data.phone)),
+            })
+          : await db.query.users.findFirst({
+              where: eq(users.email, parsed.data.email!),
+            })
         if (!user?.passwordHash) return null
 
         const valid = await bcrypt.compare(

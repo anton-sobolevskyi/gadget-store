@@ -3,8 +3,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { Cart } from "../ui/cart"
+import { auth } from "@/lib/auth"
+import { getCartSessionId } from "@/lib/cart-session"
+import { getCart } from "@/lib/repositories/cart"
 
-function Header() {
+async function Header() {
+  const [session, sessionId] = await Promise.all([auth(), getCartSessionId()])
+  const cart = await getCart(sessionId ?? "", session?.user?.id)
+  const cartCount = cart.reduce((count, item) => count + item.quantity, 0)
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="container mx-auto px-4 md:px-6">
@@ -67,7 +74,7 @@ function Header() {
             </Button>
 
             {/* Cart */}
-            <Cart />
+            <Cart count={cartCount} />
 
             {/* User */}
             <Button variant="ghost" size="icon" asChild>

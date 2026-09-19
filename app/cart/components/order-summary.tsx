@@ -4,16 +4,45 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { useStore } from "@/hooks/useStore"
+import { calculateOrderTotal } from "@/lib/order-totals"
+import { finalizeOrderAction } from "../actions"
+import type { CartItem } from "@/types/cart"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { toast } from "sonner"
 
-function OrderSummary() {
-  const getCartTotal = useStore(state => state.getCartTotal())
+function OrderSummary({
+  items,
+  isAuthenticated,
+}: {
+  items: CartItem[]
+  isAuthenticated: boolean
+}) {
+  const router = useRouter()
+  const [isFinalizing, setIsFinalizing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [phone, setPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const { subtotal, shipping, total } = calculateOrderTotal(items)
 
-  const subtotal = getCartTotal
-  const shipping = subtotal > 50 ? 0 : 10
-  const total = subtotal + shipping
+  const handleFinalize = async () => {
+    setError(null)
+    setIsFinalizing(true)
+    try {
+      const orderId = await finalizeOrderAction()
+      router.push(`/order/${orderId}`)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to finalize your order."
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsFinalizing(false)
+    }
+  }
 
   return (
     <div className="lg:sticky lg:top-24 h-fit">
@@ -68,13 +97,58 @@ function OrderSummary() {
           </div>
 
           {/* Checkout Button */}
-          <Button
-            size="lg"
-            className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
-            onClick={() => toast.success("Checkout feature coming soon!")}
-          >
-            Proceed to Checkout
-          </Button>
+          {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+          {isAuthenticated ? (
+            <Button
+              size="lg"
+              className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
+              onClick={handleFinalize}
+              disabled={items.length === 0 || isFinalizing}
+            >
+              {isFinalizing ? "Finalizing..." : "Finalize Order"}
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <Input
+                type="tel"
+                placeholder="Phone number"
+                value={phone}
+                onChange={event => setPhone(event.target.value)}
+                autoComplete="tel"
+              />
+              <Input
+                type="password"
+                placeholder="Password (8+ characters)"
+                value={password}
+                onChange={event => setPassword(event.target.value)}
+                autoComplete="new-password"
+              />
+              <Button
+                size="lg"
+                className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
+                onClick={async () => {
+                  setError(null)
+                  setIsFinalizing(true)
+                  try {
+                    await finalizeOrderAction(phone, password)
+                  } catch (error) {
+                    const message =
+                      error instanceof Error
+                        ? error.message
+                        : "Unable to finalize your order."
+                    setError(message)
+                    toast.error(message)
+                    setIsFinalizing(false)
+                  }
+                }}
+                disabled={items.length === 0 || isFinalizing}
+              >
+                {isFinalizing
+                  ? "Creating order..."
+                  : "Create account and order"}
+              </Button>
+            </div>
+          )}
 
           {/* Security Badge */}
           <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-600">

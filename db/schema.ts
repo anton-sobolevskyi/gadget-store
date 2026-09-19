@@ -48,7 +48,8 @@ export type UserRole = (typeof userRoleValues)[number]
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name"),
-  email: text("email").notNull().unique(),
+  email: text("email").unique(),
+  phone: text("phone").unique(),
   passwordHash: text("password_hash"),
   role: text("role").$type<UserRole>().notNull().default("customer"),
   emailVerified: timestamp("email_verified", { withTimezone: true }),

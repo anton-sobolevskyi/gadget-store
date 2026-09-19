@@ -3,8 +3,16 @@ import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ProductCard } from "@/app/components/product-card"
-import { useStore } from "@/hooks/useStore"
 import type { Product } from "@/types/product"
+
+const { addToCartAction } = vi.hoisted(() => ({
+  addToCartAction: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock("@/app/cart/actions", () => ({ addToCartAction }))
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}))
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn() },
@@ -26,7 +34,7 @@ const product: Product = {
 
 describe("ProductCard", () => {
   beforeEach(() => {
-    useStore.setState({ cart: [], wishlist: [] })
+    addToCartAction.mockClear()
   })
 
   it("renders product name, price and discount badge", () => {
@@ -50,8 +58,7 @@ describe("ProductCard", () => {
 
     await user.click(screen.getByRole("button", { name: /add to cart/i }))
 
-    expect(useStore.getState().cart).toHaveLength(1)
-    expect(useStore.getState().cart[0].id).toBe("1")
+    expect(addToCartAction).toHaveBeenCalledWith("1")
   })
 
   it("disables the button and shows Out of Stock when unavailable", () => {

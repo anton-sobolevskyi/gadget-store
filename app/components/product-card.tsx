@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ImageWithFallback } from "@/components/ui/image-with-fallback"
-import { useStore } from "@/hooks/useStore"
+import { addToCartAction } from "@/app/cart/actions"
 import { Product } from "@/types/product"
 import { ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 interface ProductCardProps {
@@ -15,11 +16,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const addToCart = useStore(state => state.addToCart)
+  const router = useRouter()
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
-    addToCart(product)
+    await addToCartAction(product.id)
+    router.refresh()
     toast.success(`${product.name} added to cart!`)
   }
 

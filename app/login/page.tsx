@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input"
 import { loginAction } from "./actions"
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams
+  const { error, callbackUrl } = await searchParams
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -22,6 +22,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         )}
 
         <form action={loginAction} className="space-y-4">
+          <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email

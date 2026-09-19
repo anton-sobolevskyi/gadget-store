@@ -3,28 +3,33 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ImageWithFallback } from "@/components/ui/image-with-fallback"
-import { useStore } from "@/hooks/useStore"
+import { removeFromCartAction, updateCartItemAction } from "../actions"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import type { CartItem } from "@/types/cart"
 
-function CartItems() {
-  const cart = useStore(state => state.cart)
-  const removeFromCart = useStore(state => state.removeFromCart)
-  const updateQuantity = useStore(state => state.updateQuantity)
+function CartItems({ items }: { items: CartItem[] }) {
+  const router = useRouter()
 
-  const handleRemove = (productId: string, productName: string) => {
-    removeFromCart(productId)
+  const handleRemove = async (productId: string, productName: string) => {
+    await removeFromCartAction(productId)
+    router.refresh()
     toast.success(`${productName} removed from cart`)
   }
 
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
+  const handleQuantityChange = async (
+    productId: string,
+    newQuantity: number
+  ) => {
     if (newQuantity >= 1) {
-      updateQuantity(productId, newQuantity)
+      await updateCartItemAction(productId, newQuantity)
+      router.refresh()
     }
   }
 
-  return cart.map(item => (
+  return items.map(item => (
     <Card
       key={`${item.id}-${item.selectedColor}-${item.selectedStorage}`}
       className="border-none shadow-md"
