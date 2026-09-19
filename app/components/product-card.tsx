@@ -62,7 +62,9 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Category */}
-          <p className="text-xs text-gray-500 mb-1">{product.category}</p>
+          <p className="text-xs text-gray-500 mb-1" aria-hidden="true">
+            {product.category}
+          </p>
 
           {/* Name */}
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">

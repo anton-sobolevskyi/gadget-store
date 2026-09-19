@@ -14,7 +14,7 @@ test.describe("shopping flow", () => {
   test("can open a product and add it to the cart", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" })
     const firstProductLink = page
-      .getByRole("link")
+      .locator('a[href^="/product/"]')
       .filter({
         has: page.getByRole("heading", { level: 3 }),
       })
@@ -33,7 +33,10 @@ test.describe("shopping flow", () => {
 
   test("search form navigates to results", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" })
-    await page.getByLabel("Search products").first().fill("headphones")
+    await page
+      .locator('header form[role="search"] input')
+      .first()
+      .fill("headphones")
     await page.keyboard.press("Enter")
     await expect(page).toHaveURL(/\/search\?q=headphones/)
   })

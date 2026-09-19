@@ -39,7 +39,7 @@ async function Header() {
                 aria-hidden="true"
               />
               <label htmlFor="site-search-desktop" className="sr-only">
-                Search products
+                Site product search
               </label>
               <Input
                 id="site-search-desktop"
@@ -98,7 +98,7 @@ async function Header() {
               aria-hidden="true"
             />
             <label htmlFor="site-search-mobile" className="sr-only">
-              Search products
+              Mobile product search
             </label>
             <Input
               id="site-search-mobile"
