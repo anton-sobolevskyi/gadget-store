@@ -7,9 +7,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Product } from "@/types/product"
+import { categories } from "@/data/products"
 import Link from "next/link"
 
 function ProductBreadcrumb({ product }: { product: Product }) {
+  const category = categories.find(item => item.name === product.category)
+
   return (
     <div className="border-b">
       <div className="container mx-auto px-4 md:px-6 py-4">
@@ -23,7 +26,9 @@ function ProductBreadcrumb({ product }: { product: Product }) {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href={`/category/${product.category.toLowerCase()}`}>
+                <Link
+                  href={`/category/${category?.id ?? product.category.toLowerCase()}`}
+                >
                   {product.category}
                 </Link>
               </BreadcrumbLink>

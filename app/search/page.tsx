@@ -39,6 +39,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ))}
         </div>
       )}
+
+      {q && results.length === 0 && (
+        <div className="border border-dashed border-gray-300 bg-white p-10 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
+            No products found
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Try a different product name, category, or keyword.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

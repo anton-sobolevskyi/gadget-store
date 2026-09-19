@@ -1,15 +1,16 @@
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { ProductBreadcrumb } from "./components/product-breadcrumb"
 import { Product } from "@/types/product"
-import { Shield, Star, Truck } from "lucide-react"
+import { Shield, Truck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ProductSettings } from "./components/product-settings"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProductCard } from "@/app/components/product-card"
 import { ProductPreview } from "./components/product-preview"
 import { getProductById, getRelatedProducts } from "@/lib/repositories/products"
+import { PriceDisplay } from "@/components/ui/price-display"
+import { RatingStars } from "@/components/ui/rating-stars"
 
 type ProductDetailProps = {
   params: Promise<{ id: string }>
@@ -49,14 +50,7 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
   const product: Product | null = await getProductById(id)
 
   if (!product) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold">Product not found</h1>
-        <Button asChild className="mt-4">
-          <Link href="/">Back to Home</Link>
-        </Button>
-      </div>
-    )
+    notFound()
   }
 
   const relatedProducts = await getRelatedProducts(product)
@@ -100,34 +94,23 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
                 {product.name}
               </h1>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < Math.floor(product.rating)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "fill-gray-200 text-gray-200"
-                      }`}
-                    />
-                  ))}
-                  <span className="ml-2 text-gray-600">
-                    {product.rating} ({product.reviews} reviews)
-                  </span>
-                </div>
+                <RatingStars
+                  rating={product.rating}
+                  reviews={product.reviews}
+                  size="md"
+                />
               </div>
             </div>
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-gray-900">
-                ${product.price}
-              </span>
+              <PriceDisplay
+                price={product.price}
+                originalPrice={product.originalPrice}
+                className="[&_span:first-child]:text-4xl"
+              />
               {product.originalPrice && (
                 <>
-                  <span className="text-xl text-gray-500 line-through">
-                    ${product.originalPrice}
-                  </span>
                   <Badge className="bg-red-500">
                     Save{" "}
                     {Math.round(

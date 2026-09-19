@@ -5,10 +5,8 @@ import Image from "next/image"
 import React, { useState } from "react"
 
 export function ImageWithFallback(
-  props: React.ImgHTMLAttributes<HTMLImageElement> & {
+  props: Omit<React.ComponentProps<typeof Image>, "src"> & {
     src: string
-    width?: number
-    height?: number
   }
 ) {
   const [didError, setDidError] = useState(false)
@@ -30,6 +28,7 @@ export function ImageWithFallback(
           height={360}
           src={ERROR_IMG_SRC}
           alt="Error loading image"
+          unoptimized
           {...rest}
           data-original-url={src}
         />

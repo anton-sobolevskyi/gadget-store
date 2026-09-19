@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ImageWithFallback } from "@/components/ui/image-with-fallback"
+import { PriceDisplay } from "@/components/ui/price-display"
+import { RatingStars } from "@/components/ui/rating-stars"
 import { addToCartAction } from "@/app/cart/actions"
 import { useStore } from "@/hooks/useStore"
 import { Product } from "@/types/product"
-import { Heart, ShoppingCart, Star } from "lucide-react"
+import { Heart, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -44,6 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <ImageWithFallback
               src={product.image}
               alt={product.name}
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {discountPercent > 0 && (
@@ -67,37 +70,14 @@ export function ProductCard({ product }: ProductCardProps) {
           </h3>
 
           {/* Rating */}
-          <div
-            className="flex items-center gap-1 mb-3"
-            aria-label={`Rated ${product.rating} out of 5, ${product.reviews} reviews`}
-          >
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                aria-hidden="true"
-                className={`w-4 h-4 ${
-                  i < Math.floor(product.rating)
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "fill-gray-200 text-gray-200"
-                }`}
-              />
-            ))}
-            <span className="text-sm text-gray-600 ml-1">
-              ({product.reviews})
-            </span>
-          </div>
+          <RatingStars rating={product.rating} reviews={product.reviews} />
 
           {/* Price */}
-          <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-2xl font-bold text-gray-900">
-              ${product.price}
-            </span>
-            {product.originalPrice && (
-              <span className="text-sm text-gray-500 line-through">
-                ${product.originalPrice}
-              </span>
-            )}
-          </div>
+          <PriceDisplay
+            price={product.price}
+            originalPrice={product.originalPrice}
+            className="mb-3"
+          />
         </CardContent>
       </Link>
 

@@ -4,6 +4,11 @@ import { db } from "@/lib/db"
 import { products as productsTable } from "@/db/schema"
 import { slugify } from "@/lib/utils"
 import type { Product } from "@/types/product"
+import {
+  filterCatalogProducts,
+  type CatalogQuery,
+  type CatalogResult,
+} from "@/lib/catalog-query"
 
 type ProductRow = typeof productsTable.$inferSelect
 
@@ -31,6 +36,12 @@ export async function getAllProducts(): Promise<Product[]> {
     orderBy: (products, { asc }) => [asc(products.createdAt)],
   })
   return rows.map(toProduct)
+}
+
+export async function getCatalogProducts(
+  query: CatalogQuery
+): Promise<CatalogResult> {
+  return filterCatalogProducts(await getAllProducts(), query)
 }
 
 export async function getProductById(id: string): Promise<Product | null> {

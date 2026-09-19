@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { heroSlides } from "@/lib/constants"
@@ -9,6 +10,24 @@ import {
 } from "@/lib/repositories/products"
 import { ProductCard } from "./components/product-card"
 import { HeroSlide } from "./components/hero-slide"
+
+export const metadata: Metadata = {
+  title: "Premium Tech & Gadgets | Gadget Hub",
+  description:
+    "Shop smartphones, headphones, wearables, laptops, tablets and cameras at Gadget Hub.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Premium Tech & Gadgets | Gadget Hub",
+    description:
+      "Shop smartphones, headphones, wearables, laptops, tablets and cameras at Gadget Hub.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Premium Tech & Gadgets | Gadget Hub",
+    description: "Latest gadgets, competitive prices, and fast shipping.",
+  },
+}
 
 export default async function Home() {
   const [featuredProducts, bestSellers] = await Promise.all([

@@ -38,6 +38,30 @@ test.describe("shopping flow", () => {
     await expect(page).toHaveURL(/\/search\?q=headphones/)
   })
 
+  test("catalog filters are shareable and show empty states", async ({
+    page,
+  }) => {
+    await page.goto("/products", { waitUntil: "domcontentloaded" })
+    await expect(
+      page.getByRole("heading", { name: "All Products" })
+    ).toBeVisible()
+
+    await page.getByLabel("Search products").fill("headphones")
+    await page.getByRole("button", { name: "Apply filters" }).click()
+    await expect(page).toHaveURL(/\/products\?q=headphones/)
+    await expect(
+      page.getByRole("heading", { name: "AirWave Pro Headphones" })
+    ).toBeVisible()
+    await page.getByRole("button", { name: "Clear all" }).click()
+    await expect(page).toHaveURL(/\/products$/)
+
+    await page.getByLabel("Search products").fill("not-a-real-product")
+    await page.getByRole("button", { name: "Apply filters" }).click()
+    await expect(
+      page.getByRole("heading", { name: "No products found" })
+    ).toBeVisible()
+  })
+
   test("opens a category and keeps filters in the URL", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByRole("link", { name: /smartphones/i }).click()

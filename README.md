@@ -1,108 +1,94 @@
-# Gadget Store
+# Gadget Hub
 
-Gadget Hub is a Next.js (App Router) e-commerce storefront for gadgets — smartphones, audio, wearables, laptops, tablets, and cameras. It includes:
+Gadget Hub is a production-minded Next.js storefront for smartphones, audio, wearables, laptops, tablets, and cameras. The portfolio focus is a shareable product catalog: server-rendered filters, URL state, pagination, responsive product cards, and an accessible product gallery.
 
-- A public storefront: home/featured products, search, product detail pages, and cart.
-- Authentication via [Auth.js](https://authjs.dev) (credentials + Google OAuth) backed by Postgres/Drizzle.
-- An `/admin` section (role-gated) for product management (CRUD + image upload to Cloudflare R2) and read-only order viewing.
+## Features
 
-## Tech stack
+- Catalog filtering by search, category, price range, stock status, and sort order.
+- Shareable catalog URLs with active filters, clear-all, result counts, empty states, loading states, and pagination.
+- Product details with breadcrumbs, thumbnails, keyboard and touch gallery navigation, lightbox viewing, related products, quantity controls, cart, and wishlist.
+- Auth.js credentials and Google OAuth backed by Postgres and Drizzle ORM.
+- Role-gated admin product CRUD with Cloudflare R2 image uploads and read-only order management.
+- Metadata, canonical URLs, Open Graph/Twitter cards, JSON-LD product data, sitemap, and robots rules.
+- Unit, integration, and Playwright end-to-end tests with CI checks.
 
-- [Next.js](https://nextjs.org) (App Router) + React + TypeScript
-- [Drizzle ORM](https://orm.drizzle.team) + Postgres
-- [Auth.js](https://authjs.dev) (NextAuth v5)
-- Tailwind CSS + Radix UI primitives
-- Cloudflare R2 (S3-compatible) for image storage
-- Vitest (unit/integration) + Playwright (e2e)
+## Stack
 
-## Getting started
+- Next.js 16 App Router, React 19, TypeScript
+- Tailwind CSS 4, Radix UI primitives, Lucide icons
+- Drizzle ORM, PostgreSQL, Auth.js
+- Cloudflare R2 for admin-uploaded images
+- Vitest, Testing Library, Testcontainers, Playwright
+
+## Local setup
 
 ### Prerequisites
 
-- Node.js + [pnpm](https://pnpm.io)
-- Docker (for the local Postgres instance)
+- Node.js 20 or newer
+- pnpm
+- Docker for local PostgreSQL
 
-### 1. Install dependencies
+### Install and configure
 
 ```bash
 pnpm install
-```
-
-### 2. Configure environment variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
 cp .env.example .env
 ```
 
-| Variable                                                                                      | Description                                                               |
-| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                                | Postgres connection string (matches `docker-compose.yml` by default)      |
-| `AUTH_SECRET`                                                                                 | Auth.js session secret — generate with `npx auth secret`                  |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`                                                       | Optional Google OAuth credentials                                         |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_URL` | Cloudflare R2 config, used by `lib/r2.ts` for admin product image uploads |
+Required environment variables:
 
-### 3. Start Postgres
+| Variable                                                                                      | Purpose                                             |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `DATABASE_URL`                                                                                | PostgreSQL connection string                        |
+| `AUTH_SECRET`                                                                                 | Auth.js session secret                              |
+| `NEXT_PUBLIC_SITE_URL`                                                                        | Public origin used by metadata, sitemap, and robots |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`                                                       | Optional Google OAuth credentials                   |
+| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_URL` | Optional Cloudflare R2 image storage                |
+
+Start the database and seed the catalog:
 
 ```bash
 docker compose up -d
-```
-
-### 4. Run migrations and seed data
-
-```bash
 pnpm db:migrate
 pnpm db:seed
-```
-
-### 5. Run the dev server
-
-```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Useful scripts
+## Commands
 
-| Script                                                                     | Purpose                                         |
-| -------------------------------------------------------------------------- | ----------------------------------------------- |
-| `pnpm dev` / `pnpm build` / `pnpm start`                                   | Run/build/start the Next.js app                 |
-| `pnpm lint` / `pnpm typecheck` / `pnpm format`                             | Code quality checks                             |
-| `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`                  | Drizzle migrations & DB browser                 |
-| `pnpm db:seed`                                                             | Seed the catalog from `data/products.ts`        |
-| `pnpm db:create-admin <email> <password>`                                  | Create or promote a user to `admin` (see below) |
-| `pnpm test` / `pnpm test:unit` / `pnpm test:integration` / `pnpm test:e2e` | Test suites                                     |
+| Command                    | Purpose                                              |
+| -------------------------- | ---------------------------------------------------- |
+| `pnpm dev`                 | Start the development server                         |
+| `pnpm build && pnpm start` | Build and run production mode                        |
+| `pnpm lint`                | Run ESLint                                           |
+| `pnpm typecheck`           | Run TypeScript without emitting files                |
+| `pnpm test:unit`           | Run unit and component tests                         |
+| `pnpm test:integration`    | Run PostgreSQL integration tests with Testcontainers |
+| `pnpm test:e2e`            | Run Playwright browser tests                         |
+| `pnpm format:check`        | Check Prettier formatting                            |
+
+## Catalog URL contract
+
+The canonical catalog is `/products`. Supported query parameters are:
+
+`q`, `category`, `minPrice`, `maxPrice`, `inStock=true`, `sort=price-asc|price-desc|rating-desc`, and `page`.
+
+Category routes reuse the same filtering behavior while constraining results to one category. Search pages remain noindex because they are user-generated result pages.
 
 ## Admin access
 
-There's no sign-up flow or role-management UI. To access `/admin` locally:
+There is no public sign-up or role-management UI. Create a local administrator with:
 
 ```bash
-pnpm db:create-admin admin@example.com Admin1234
+pnpm db:create-admin admin@example.com <password>
 ```
 
-This creates (or promotes) a user with that email/password and `role = "admin"`, hashing the password with bcrypt. Then sign in at [http://localhost:3000/login](http://localhost:3000/login) with those credentials and visit `/admin/products` or `/admin/orders`.
+Then sign in at `/login` and open `/admin/products` or `/admin/orders`. Never reuse development credentials in a deployed environment.
 
-A local dev admin account already exists with:
+## Deployment notes
 
-- **Email:** `admin@example.com`
-- **Password:** `Admin1234`
+Set `NEXT_PUBLIC_SITE_URL` to the deployed origin, run migrations during deployment, and configure the database, Auth.js, and R2 environment variables. Product seed data is demo content; production catalogs should use the admin workflow or a managed import.
 
-Change the password anytime by re-running `pnpm db:create-admin` with the same email and a new password. Do not reuse these credentials outside local development.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The demo currently uses external Unsplash image URLs for seeded products and is English-only. A production rollout should move catalog media to R2 or another controlled image origin and add localized routes before emitting hreflang alternates.

@@ -3,14 +3,17 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 
 import { ProductCard } from "@/app/components/product-card"
+import { CatalogPagination } from "@/app/products/components/catalog-pagination"
 import { Button } from "@/components/ui/button"
 import { getCategoryById } from "@/data/products"
-import { getProductsByCategory } from "@/lib/repositories/products"
+import { parseCatalogQuery } from "@/lib/catalog-query"
+import { getCatalogProducts } from "@/lib/repositories/products"
 import { CategoryControls } from "./components/category-controls"
 
 type CategoryPageProps = {
   params: Promise<{ id: string }>
   searchParams: Promise<{
+    q?: string
     sort?: string
     minPrice?: string
     maxPrice?: string
@@ -32,6 +35,16 @@ export async function generateMetadata({
     title: `${category.name} | Gadget Hub`,
     description: `Shop the latest ${category.name.toLowerCase()} at Gadget Hub.`,
     alternates: { canonical: `/category/${category.id}` },
+    openGraph: {
+      title: `${category.name} | Gadget Hub`,
+      description: `Shop the latest ${category.name.toLowerCase()} at Gadget Hub.`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} | Gadget Hub`,
+      description: `Shop the latest ${category.name.toLowerCase()} at Gadget Hub.`,
+    },
   }
 }
 
@@ -40,36 +53,16 @@ export default async function CategoryPage({
   searchParams,
 }: CategoryPageProps) {
   const { id } = await params
-  const { sort, minPrice, maxPrice, inStock } = await searchParams
+  const rawSearchParams = await searchParams
   const category = getCategoryById(id)
 
   if (!category) notFound()
 
-  const minPriceValue = Number(minPrice)
-  const maxPriceValue = Number(maxPrice)
-  const products = (await getProductsByCategory(category.name))
-    .filter(product => {
-      if (inStock === "true" && !product.inStock) return false
-      if (Number.isFinite(minPriceValue) && product.price < minPriceValue) {
-        return false
-      }
-      if (Number.isFinite(maxPriceValue) && product.price > maxPriceValue) {
-        return false
-      }
-      return true
-    })
-    .sort((first, second) => {
-      switch (sort) {
-        case "price-asc":
-          return first.price - second.price
-        case "price-desc":
-          return second.price - first.price
-        case "rating-desc":
-          return second.rating - first.rating
-        default:
-          return 0
-      }
-    })
+  const query = parseCatalogQuery({
+    ...rawSearchParams,
+    category: category.name,
+  })
+  const result = await getCatalogProducts(query)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,15 +91,22 @@ export default async function CategoryPage({
             {category.name}
           </h1>
           <p className="mt-2 text-gray-600" aria-live="polite">
-            {products.length} product{products.length === 1 ? "" : "s"} found
+            {result.total} product{result.total === 1 ? "" : "s"} found
           </p>
         </div>
 
-        <CategoryControls filters={{ sort, minPrice, maxPrice, inStock }} />
+        <CategoryControls
+          filters={{
+            sort: rawSearchParams.sort,
+            minPrice: rawSearchParams.minPrice,
+            maxPrice: rawSearchParams.maxPrice,
+            inStock: rawSearchParams.inStock,
+          }}
+        />
 
-        {products.length > 0 ? (
+        {result.products.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map(product => (
+            {result.products.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -123,6 +123,12 @@ export default async function CategoryPage({
             </Button>
           </div>
         )}
+
+        <CatalogPagination
+          page={result.page}
+          pageCount={result.pageCount}
+          searchParams={rawSearchParams}
+        />
       </div>
     </div>
   )
