@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
-import { users } from "@/db/schema"
+import { users, type UserRole } from "@/db/schema"
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -41,7 +41,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
         if (!valid) return null
 
-        return { id: user.id, name: user.name, email: user.email }
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        }
       },
     }),
     // Only registered when credentials are configured, so local dev without
@@ -57,11 +62,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     jwt: async ({ token, user }) => {
-      if (user) token.id = user.id
+      if (user) {
+        token.id = user.id
+        // Google sign-in doesn't return `role`, so fall back to a DB lookup.
+        const dbUser = user.id
+          ? await db.query.users.findFirst({ where: eq(users.id, user.id) })
+          : undefined
+        token.role = user.role ?? dbUser?.role ?? "customer"
+      }
       return token
     },
     session: async ({ session, token }) => {
-      if (session.user) session.user.id = token.id as string
+      if (session.user) {
+        session.user.id = token.id as string
+        session.user.role = token.role as UserRole
+      }
       return session
     },
   },

@@ -42,11 +42,15 @@ export const products = pgTable("products", {
 
 // --- Auth.js (Drizzle adapter contract) --------------------------------
 
+export const userRoleValues = ["admin", "customer"] as const
+export type UserRole = (typeof userRoleValues)[number]
+
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name"),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash"),
+  role: text("role").$type<UserRole>().notNull().default("customer"),
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
   createdAt: timestamp("created_at", { withTimezone: true })
